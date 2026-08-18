@@ -44,7 +44,7 @@ QtObject {
     property int islandRadiusCollapsed: 20
     property int islandRadiusExpanded: 24
 
-    property string barPosition: "top"
+    property string barPosition: "bottom"
     property string themeAccentColor: "#8AB4F8"
 
     property bool showClock: true
@@ -64,7 +64,7 @@ QtObject {
     property bool islandPassThrough: false
     property bool autoHideFullscreen: true
 
-    property bool topBarAutoHide: true
+    property bool topBarAutoHide: false
     property bool topBarFullscreenAutoHide: true
     property bool topBarDesktopAutoHide: false
     property bool topBarShowWorkspaces: true

@@ -11,15 +11,11 @@ ColumnLayout {
     property int actionIndex: 0
 
     function getItemCount() {
-        return 12;
+        return 5;
     }
 
     function handleHorizontal(delta) {
-        if (focusIndex === 4) {
-            topBarPosItem.cycle(delta);
-        } else if (focusIndex === 8) {
-            leftBarPosItem.cycle(delta);
-        } else if (focusIndex === 10) {
+        if (focusIndex === 3) {
             cavaFpsItem.cycle(delta);
         }
     }
@@ -28,15 +24,8 @@ ColumnLayout {
         if (focusIndex === 0) item0.triggerToggle();
         else if (focusIndex === 1) item1.triggerToggle();
         else if (focusIndex === 2) item2.triggerToggle();
-        else if (focusIndex === 3) item3.triggerToggle();
-        else if (focusIndex === 4) topBarPosItem.cycle(1);
-        else if (focusIndex === 5) item5.triggerToggle();
-        else if (focusIndex === 6) item6.triggerToggle();
-        else if (focusIndex === 7) item7.triggerToggle();
-        else if (focusIndex === 8) leftBarPosItem.cycle(1);
-        else if (focusIndex === 9) item9.triggerToggle();
-        else if (focusIndex === 10) cavaFpsItem.cycle(1);
-        else if (focusIndex === 11) item11.triggerToggle();
+        else if (focusIndex === 3) cavaFpsItem.cycle(1);
+        else if (focusIndex === 4) item4.triggerToggle();
     }
 
     Layout.fillWidth: true
@@ -77,84 +66,7 @@ ColumnLayout {
     }
 
     // ==========================================
-    // 2. TOP BAR
-    // ==========================================
-    SettingCardGroup {
-        titleText: "Top Status Bar"
-
-        SettingToggleRow {
-            id: item3
-            labelText: "Enable Top Bar"
-            descriptionText: "Show desktop status bar with clock, workspaces, and tray"
-            checked: ConfigService.enableTopBar
-            isFocused: root.focusIndex === 3
-            onToggled: newValue => ConfigService.enableTopBar = newValue
-        }
-
-        SettingPillSelector {
-            id: topBarPosItem
-            labelText: "Screen Position"
-            options: ["Top", "Bottom"]
-            selectedIndex: ConfigService.barPosition === "bottom" ? 1 : 0
-            isFocused: root.focusIndex === 4
-            onOptionSelected: (idx, opt) => ConfigService.barPosition = idx === 1 ? "bottom" : "top"
-        }
-
-        SettingToggleRow {
-            id: item5
-            labelText: "Auto-Hide Top Bar"
-            descriptionText: "Slide bar off-screen when cursor leaves screen edge"
-            checked: ConfigService.topBarAutoHide
-            isFocused: root.focusIndex === 5
-            onToggled: newValue => ConfigService.topBarAutoHide = newValue
-        }
-
-        SettingToggleRow {
-            id: item6
-            labelText: "Workspaces Pager"
-            descriptionText: "Display virtual workspace indicators"
-            checked: ConfigService.topBarShowWorkspaces
-            isFocused: root.focusIndex === 6
-            onToggled: newValue => ConfigService.topBarShowWorkspaces = newValue
-        }
-    }
-
-    // ==========================================
-    // 3. LEFT DOCK / BAR
-    // ==========================================
-    SettingCardGroup {
-        titleText: "Left Dock & Action Bar"
-
-        SettingToggleRow {
-            id: item7
-            labelText: "Enable Left Bar"
-            descriptionText: "Vertical side dock with quick launchers and toggles"
-            checked: ConfigService.enableLeftBar
-            isFocused: root.focusIndex === 7
-            onToggled: newValue => ConfigService.enableLeftBar = newValue
-        }
-
-        SettingPillSelector {
-            id: leftBarPosItem
-            labelText: "Menu Position"
-            options: ["Top", "Bottom"]
-            selectedIndex: ConfigService.leftBarMenuPosition === "bottom" ? 1 : 0
-            isFocused: root.focusIndex === 8
-            onOptionSelected: (idx, opt) => ConfigService.leftBarMenuPosition = idx === 1 ? "bottom" : "top"
-        }
-
-        SettingToggleRow {
-            id: item9
-            labelText: "Auto-Hide Left Bar"
-            descriptionText: "Slide dock off-screen when not hovered"
-            checked: ConfigService.leftBarAutoHide
-            isFocused: root.focusIndex === 9
-            onToggled: newValue => ConfigService.leftBarAutoHide = newValue
-        }
-    }
-
-    // ==========================================
-    // 4. DESKTOP WIDGETS
+    // 2. DESKTOP WIDGETS
     // ==========================================
     SettingCardGroup {
         titleText: "Desktop Widgets & Visualizer"
@@ -165,16 +77,16 @@ ColumnLayout {
             options: ["30 FPS", "60 FPS", "120 FPS"]
             readonly property var fpsValues: [30, 60, 120]
             selectedIndex: Math.max(0, fpsValues.indexOf(ConfigService.cavaFramerate))
-            isFocused: root.focusIndex === 10
+            isFocused: root.focusIndex === 3
             onOptionSelected: (idx, opt) => ConfigService.cavaFramerate = fpsValues[idx] || 60
         }
 
         SettingToggleRow {
-            id: item11
+            id: item4
             labelText: "Desktop Media Player"
             descriptionText: "Interactive music widget on the desktop surface"
             checked: ConfigService.showMediaPlayer
-            isFocused: root.focusIndex === 11
+            isFocused: root.focusIndex === 4
             onToggled: newValue => ConfigService.showMediaPlayer = newValue
         }
     }
