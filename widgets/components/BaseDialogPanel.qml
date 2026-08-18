@@ -64,6 +64,7 @@ PanelWindow {
         InputService.lockModality(InputService.mode);
         visible = true;
         isOpen = true;
+        if (requiresKeyboardFocus) keyFocusReceiver.forceActiveFocus();
         focusGrabTimer.restart();
     }
 
@@ -80,6 +81,7 @@ PanelWindow {
     onIsOpenChanged: {
         if (isOpen) {
             visible = true;
+            if (requiresKeyboardFocus) keyFocusReceiver.forceActiveFocus();
             focusGrabTimer.restart();
         } else {
             closeDelayTimer.restart();

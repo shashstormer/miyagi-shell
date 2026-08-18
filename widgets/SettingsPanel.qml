@@ -25,18 +25,11 @@ BaseDialogPanel {
     function open() {
         InputService.closeOtherPanels(root);
         InputService.lockModality(InputService.mode);
-        ConfigService.fetchShadersStatus();
-        ConfigService.fetchPowerProfile();
-        ConfigService.fetchBatteryStatus();
-        ConfigService.fetchNotificationPreferences();
-        ConfigService.fetchNotificationStats();
-        ConfigService.fetchApplications();
-        ConfigService.fetchConfig();
-        ConfigService.fetchAllSystemStatus();
         focusZone = 0;
         contentFocusIndex = 0;
         contentActionIndex = 0;
         isOpen = true;
+        onCategoryChanged(categories[activeCategoryIndex].id);
     }
 
     Connections {
@@ -84,16 +77,33 @@ BaseDialogPanel {
         { id: "about", label: "System & About", icon: "info" }
     ]
 
+    Component { id: displayComp; DisplaySettingsView {} }
+    Component { id: soundComp; SoundSettingsView {} }
+    Component { id: batteryComp; BatterySettingsView {} }
+    Component { id: networkComp; NetworkSettingsView {} }
+    Component { id: bluetoothComp; BluetoothSettingsView {} }
+    Component { id: notifComp; NotificationSettingsView {} }
+    Component { id: shellComp; ShellSettingsView {} }
+    Component { id: appsComp; AppsSettingsView {} }
+    Component { id: aboutComp; AboutSettingsView {} }
+
+    function getComponentForCategory(index) {
+        switch (index) {
+            case 0: return displayComp;
+            case 1: return soundComp;
+            case 2: return batteryComp;
+            case 3: return networkComp;
+            case 4: return bluetoothComp;
+            case 5: return notifComp;
+            case 6: return shellComp;
+            case 7: return appsComp;
+            case 8: return aboutComp;
+            default: return displayComp;
+        }
+    }
+
     function getCurrentView() {
-        if (activeCategoryIndex === 0) return displayView;
-        if (activeCategoryIndex === 1) return soundView;
-        if (activeCategoryIndex === 2) return batteryView;
-        if (activeCategoryIndex === 3) return networkView;
-        if (activeCategoryIndex === 4) return bluetoothView;
-        if (activeCategoryIndex === 5) return notifView;
-        if (activeCategoryIndex === 6) return shellView;
-        if (activeCategoryIndex === 7) return appsView;
-        return aboutView;
+        return viewLoader ? viewLoader.item : null;
     }
 
     function getContentItemCount() {
@@ -297,72 +307,23 @@ BaseDialogPanel {
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
             ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
-            ColumnLayout {
+            Loader {
+                id: viewLoader
                 width: contentScrollView.availableWidth > 40 ? (contentScrollView.availableWidth - 28) : 660
                 x: 14
-                spacing: 12
+                sourceComponent: root.isOpen ? root.getComponentForCategory(root.activeCategoryIndex) : null
 
-                DisplaySettingsView {
-                    id: displayView
-                    visible: root.activeCategoryIndex === 0
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 0) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
+                Binding {
+                    target: viewLoader.item
+                    property: "focusIndex"
+                    value: (root.focusZone === 1) ? root.contentFocusIndex : -1
+                    when: viewLoader.item !== null
                 }
-
-                SoundSettingsView {
-                    id: soundView
-                    visible: root.activeCategoryIndex === 1
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 1) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
-                }
-
-                BatterySettingsView {
-                    id: batteryView
-                    visible: root.activeCategoryIndex === 2
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 2) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
-                }
-
-                NetworkSettingsView {
-                    id: networkView
-                    visible: root.activeCategoryIndex === 3
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 3) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
-                }
-
-                BluetoothSettingsView {
-                    id: bluetoothView
-                    visible: root.activeCategoryIndex === 4
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 4) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
-                }
-
-                NotificationSettingsView {
-                    id: notifView
-                    visible: root.activeCategoryIndex === 5
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 5) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
-                }
-
-                ShellSettingsView {
-                    id: shellView
-                    visible: root.activeCategoryIndex === 6
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 6) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
-                }
-
-                AppsSettingsView {
-                    id: appsView
-                    visible: root.activeCategoryIndex === 7
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 7) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
-                }
-
-                AboutSettingsView {
-                    id: aboutView
-                    visible: root.activeCategoryIndex === 8
-                    focusIndex: (root.focusZone === 1 && root.activeCategoryIndex === 8) ? root.contentFocusIndex : -1
-                    actionIndex: root.contentActionIndex
+                Binding {
+                    target: viewLoader.item
+                    property: "actionIndex"
+                    value: root.contentActionIndex
+                    when: viewLoader.item !== null
                 }
             }
         }
