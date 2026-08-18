@@ -1,0 +1,6 @@
+singleton Theme 1.0 Theme.qml
+singleton MediaHelper 1.0 MediaHelper.qml
+singleton ConfigService 1.0 ConfigService.qml
+singleton CavaService 1.0 CavaService.qml
+singleton InputService 1.0 InputService.qml
+singleton BrightnessService 1.0 BrightnessService.qml
