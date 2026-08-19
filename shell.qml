@@ -264,6 +264,11 @@ ShellRoot {
         id: menuSelectorPanel
     }
 
+    // 18. Focus Application Window Switcher Panel
+    WindowSwitcherPanel {
+        id: windowSwitcherPanel
+    }
+
     // IPC Handler for Alt-Tab Switcher
     IpcHandler {
         target: "alttab"
@@ -501,6 +506,7 @@ ShellRoot {
                 typeof altTabPanel !== "undefined" ? altTabPanel : null,
                 typeof workspacesOverviewPanel !== "undefined" ? workspacesOverviewPanel : null,
                 typeof menuSelectorPanel !== "undefined" ? menuSelectorPanel : null,
+                typeof windowSwitcherPanel !== "undefined" ? windowSwitcherPanel : null,
                 typeof settingsPanel !== "undefined" ? settingsPanel : null
             ];
             for (var i = 0; i < panels.length; i++) {

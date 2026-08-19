@@ -396,6 +396,33 @@ QtObject {
         fetchWindows();
     }
 
+    // Centralized Window Operations via Desktop Service IPC
+    function focusWindow(winData, callback) {
+        if (!winData) return;
+        var addr = typeof winData === "string" ? winData : winData.address;
+        var wsId = (winData && winData.workspace_id !== undefined) ? winData.workspace_id : ((winData && winData.workspace && winData.workspace.id !== undefined) ? winData.workspace.id : null);
+        var isMin = winData && !!winData.is_minimized;
+
+        if (isMin) {
+            configService.toggleMinimize(addr);
+        }
+        if (wsId !== null && wsId !== undefined && wsId > 0 && wsId !== configService.activeWorkspaceId) {
+            configService.switchWorkspace(wsId);
+        }
+        if (addr) {
+            _sendRequest("POST", "http://localhost:8765/desktop/focus_window", {"address": addr}, function (res, ok) {
+                if (!ok) {
+                    configService.executeAction("focus_address_" + addr);
+                }
+                configService.fetchWindows();
+                if (callback) callback(ok);
+            });
+        } else {
+            configService.fetchWindows();
+            if (callback) callback(true);
+        }
+    }
+
     function fetchBluetoothStatus(callback) {
         _sendRequest("POST", "http://localhost:8765/system/get_bluetooth_status", {}, function (res, ok) {
             if (ok && res) {

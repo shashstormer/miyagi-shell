@@ -31,99 +31,121 @@ BaseFlyoutPanel {
     property var batteryPanelRef: typeof batteryPanel !== "undefined" ? batteryPanel : null
     property var calendarPanelRef: typeof calendarPanel !== "undefined" ? calendarPanel : null
     property var settingsPanelRef: typeof settingsPanel !== "undefined" ? settingsPanel : null
+    property var windowSwitcherPanelRef: typeof windowSwitcherPanel !== "undefined" ? windowSwitcherPanel : null
 
+    // Static stable definition of all menu items (no reactive bindings in the array itself)
     readonly property var allMenuItems: [
+        {
+            id: "windows",
+            name: "Focus Application",
+            description: "Switch & manage windows across all workspaces",
+            icon: "window"
+        },
         {
             id: "bluetooth",
             name: "Bluetooth",
             description: "Paired devices & bluetooth connections",
-            icon: "bluetooth",
-            badge: ConfigService.bluetoothPowered ? (ConfigService.bluetoothConnected ? "Connected" : "On") : "Off",
-            action: function() {
-                if (selectorWindow.bluetoothPanelRef) InputService.openPanel(selectorWindow.bluetoothPanelRef, selectorWindow);
-            }
+            icon: "bluetooth"
         },
         {
             id: "wifi",
             name: "Wi-Fi & Network",
             description: "Wireless networks & connections",
-            icon: "wifi",
-            badge: ConfigService.wifiEnabled ? (ConfigService.wifiSsid ? ConfigService.wifiSsid : "On") : "Off",
-            action: function() {
-                if (selectorWindow.wifiPanelRef) InputService.openPanel(selectorWindow.wifiPanelRef, selectorWindow);
-            }
+            icon: "wifi"
         },
         {
             id: "microphone",
             name: "Microphone",
             description: "Audio input & microphone control",
-            icon: "mic",
-            badge: ConfigService.micMuted ? "Muted" : ((ConfigService.micVolume !== undefined ? ConfigService.micVolume : 100) + "%"),
-            action: function() {
-                if (selectorWindow.microphonePanelRef) InputService.openPanel(selectorWindow.microphonePanelRef, selectorWindow);
-            }
+            icon: "mic"
         },
         {
             id: "volume",
             name: "Volume & Sound",
             description: "Audio output & playback devices",
-            icon: "volume",
-            badge: ConfigService.audioMuted ? "Muted" : ((ConfigService.audioVolume !== undefined ? ConfigService.audioVolume : 100) + "%"),
-            action: function() {
-                if (selectorWindow.volumePanelRef) InputService.openPanel(selectorWindow.volumePanelRef, selectorWindow);
-            }
+            icon: "volume"
         },
         {
             id: "launcher",
             name: "Application Launcher",
             description: "Search & launch desktop applications",
-            icon: "grid9",
-            badge: "Apps",
-            action: function() {
-                if (selectorWindow.appLauncherPanelRef) InputService.openPanel(selectorWindow.appLauncherPanelRef, selectorWindow);
-            }
+            icon: "grid9"
         },
         {
             id: "notifications",
             name: "Notifications",
             description: "Notification center & history drawer",
-            icon: "bell",
-            badge: typeof notificationPanel !== "undefined" && notificationPanel && notificationPanel.unreadCount > 0 ? (notificationPanel.unreadCount + " New") : "Drawer",
-            action: function() {
-                if (selectorWindow.notificationPanelRef) InputService.openPanel(selectorWindow.notificationPanelRef, selectorWindow);
-            }
+            icon: "bell"
         },
         {
             id: "battery",
             name: "Battery & Power",
             description: "Battery health & energy profiles",
-            icon: "battery",
-            badge: (ConfigService.batteryPercentage !== undefined ? ConfigService.batteryPercentage : 100) + "%",
-            action: function() {
-                if (selectorWindow.batteryPanelRef) InputService.openPanel(selectorWindow.batteryPanelRef, selectorWindow);
-            }
+            icon: "battery"
         },
         {
             id: "calendar",
             name: "Calendar & Date",
             description: "Calendar, events & time schedule",
-            icon: "calendar",
-            badge: Qt.formatDateTime(new Date(), "MMM d"),
-            action: function() {
-                if (selectorWindow.calendarPanelRef) InputService.openPanel(selectorWindow.calendarPanelRef, selectorWindow);
-            }
+            icon: "calendar"
         },
         {
             id: "settings",
             name: "Settings",
             description: "System & desktop configuration",
-            icon: "settings",
-            badge: "Config",
-            action: function() {
-                if (selectorWindow.settingsPanelRef) InputService.openPanel(selectorWindow.settingsPanelRef, selectorWindow);
-            }
+            icon: "settings"
         }
     ]
+
+    function getItemBadge(itemId) {
+        if (itemId === "windows") {
+            return (ConfigService.windowsList ? ConfigService.windowsList.length : 0) + " Windows";
+        }
+        if (itemId === "bluetooth") {
+            return ConfigService.bluetoothPowered ? (ConfigService.bluetoothConnected ? "Connected" : "On") : "Off";
+        }
+        if (itemId === "wifi") {
+            return ConfigService.wifiEnabled ? (ConfigService.wifiSsid ? ConfigService.wifiSsid : "On") : "Off";
+        }
+        if (itemId === "microphone") {
+            return ConfigService.micMuted ? "Muted" : ((ConfigService.micVolume !== undefined ? ConfigService.micVolume : 100) + "%");
+        }
+        if (itemId === "volume") {
+            return ConfigService.audioMuted ? "Muted" : ((ConfigService.audioVolume !== undefined ? ConfigService.audioVolume : 100) + "%");
+        }
+        if (itemId === "launcher") {
+            return "Apps";
+        }
+        if (itemId === "notifications") {
+            return typeof notificationPanel !== "undefined" && notificationPanel && notificationPanel.unreadCount > 0 ? (notificationPanel.unreadCount + " New") : "Drawer";
+        }
+        if (itemId === "battery") {
+            return (ConfigService.batteryPercentage !== undefined ? ConfigService.batteryPercentage : 100) + "%";
+        }
+        if (itemId === "calendar") {
+            return Qt.formatDateTime(new Date(), "MMM d");
+        }
+        if (itemId === "settings") {
+            return "Config";
+        }
+        return "";
+    }
+
+    function triggerAction(itemId) {
+        selectorWindow.close();
+        Qt.callLater(function() {
+            if (itemId === "windows" && selectorWindow.windowSwitcherPanelRef) InputService.openPanel(selectorWindow.windowSwitcherPanelRef, selectorWindow);
+            else if (itemId === "bluetooth" && selectorWindow.bluetoothPanelRef) InputService.openPanel(selectorWindow.bluetoothPanelRef, selectorWindow);
+            else if (itemId === "wifi" && selectorWindow.wifiPanelRef) InputService.openPanel(selectorWindow.wifiPanelRef, selectorWindow);
+            else if (itemId === "microphone" && selectorWindow.microphonePanelRef) InputService.openPanel(selectorWindow.microphonePanelRef, selectorWindow);
+            else if (itemId === "volume" && selectorWindow.volumePanelRef) InputService.openPanel(selectorWindow.volumePanelRef, selectorWindow);
+            else if (itemId === "launcher" && selectorWindow.appLauncherPanelRef) InputService.openPanel(selectorWindow.appLauncherPanelRef, selectorWindow);
+            else if (itemId === "notifications" && selectorWindow.notificationPanelRef) InputService.openPanel(selectorWindow.notificationPanelRef, selectorWindow);
+            else if (itemId === "battery" && selectorWindow.batteryPanelRef) InputService.openPanel(selectorWindow.batteryPanelRef, selectorWindow);
+            else if (itemId === "calendar" && selectorWindow.calendarPanelRef) InputService.openPanel(selectorWindow.calendarPanelRef, selectorWindow);
+            else if (itemId === "settings" && selectorWindow.settingsPanelRef) InputService.openPanel(selectorWindow.settingsPanelRef, selectorWindow);
+        });
+    }
 
     readonly property var filteredItems: {
         var q = searchQuery.toLowerCase().trim();
@@ -139,11 +161,7 @@ BaseFlyoutPanel {
         if (isOpen) {
             searchQuery = "";
             searchInput.text = "";
-            if (selectedIndex < 0 || selectedIndex >= allMenuItems.length) {
-                selectedIndex = 0;
-            }
-            menuListView.currentIndex = selectedIndex;
-            menuListView.positionViewAtIndex(selectedIndex, ListView.Contain);
+            selectedIndex = 0;
             InputService.useKeyboard();
             focusTimer.restart();
         }
@@ -151,39 +169,31 @@ BaseFlyoutPanel {
 
     Timer {
         id: focusTimer
-        interval: 80
+        interval: 60
         repeat: false
-        onTriggered: searchInput.forceFocus()
+        onTriggered: {
+            if (selectorWindow.isOpen) {
+                searchInput.forceFocus();
+            }
+        }
     }
 
     function selectCurrent() {
-        var currentIdx = (menuListView.currentIndex >= 0 && menuListView.currentIndex < filteredItems.length)
-            ? menuListView.currentIndex
-            : selectedIndex;
-        if (filteredItems.length > 0 && currentIdx >= 0 && currentIdx < filteredItems.length) {
-            var item = filteredItems[currentIdx];
-            selectorWindow.close();
-            if (item && item.action) {
-                var act = item.action;
-                Qt.callLater(function() {
-                    act();
-                });
-            }
+        if (filteredItems.length === 0) return;
+        var idx = Math.max(0, Math.min(selectedIndex, filteredItems.length - 1));
+        var item = filteredItems[idx];
+        if (item) {
+            triggerAction(item.id);
         }
     }
 
     function navigate(delta) {
         InputService.useKeyboard();
         var count = filteredItems.length;
-        if (count > 0) {
-            var current = (menuListView.currentIndex >= 0 && menuListView.currentIndex < count)
-                ? menuListView.currentIndex
-                : selectedIndex;
-            var nextIdx = (current + (delta % count) + count) % count;
-            selectedIndex = nextIdx;
-            menuListView.currentIndex = nextIdx;
-            menuListView.positionViewAtIndex(nextIdx, ListView.Contain);
-        }
+        if (count <= 0) return;
+        var nextIdx = (selectedIndex + (delta % count) + count) % count;
+        selectedIndex = nextIdx;
+        menuListView.positionViewAtIndex(nextIdx, ListView.Contain);
     }
 
     // Connect to global InputService navigation signals
@@ -228,10 +238,6 @@ BaseFlyoutPanel {
                 currentIndex: selectorWindow.selectedIndex
                 highlightMoveDuration: 0
 
-                onCurrentIndexChanged: {
-                    selectorWindow.selectedIndex = currentIndex;
-                }
-
                 delegate: PanelCardItem {
                     id: menuCard
                     required property var modelData
@@ -239,11 +245,12 @@ BaseFlyoutPanel {
 
                     width: menuListView.width - 10
                     itemHeight: 50
-                    isCurrent: menuListView.currentIndex === index
+                    isCurrent: selectorWindow.selectedIndex === index
 
                     onItemHovered: {
-                        menuListView.currentIndex = index;
-                        selectorWindow.selectedIndex = index;
+                        if (InputService.isMouse) {
+                            selectorWindow.selectedIndex = index;
+                        }
                     }
 
                     RowLayout {
@@ -291,8 +298,9 @@ BaseFlyoutPanel {
                                 }
 
                                 PillBadge {
-                                    visible: modelData.badge !== "" && modelData.badge !== undefined
-                                    text: modelData.badge || ""
+                                    readonly property string badgeText: selectorWindow.getItemBadge(modelData.id)
+                                    visible: badgeText !== ""
+                                    text: badgeText
                                     isInteractive: false
                                     pillHeight: 18
                                     fontSize: 10
@@ -320,10 +328,7 @@ BaseFlyoutPanel {
                     }
 
                     onClicked: {
-                        selectorWindow.close();
-                        if (modelData.action) {
-                            modelData.action();
-                        }
+                        selectorWindow.triggerAction(modelData.id);
                     }
                 }
 
@@ -363,7 +368,6 @@ BaseFlyoutPanel {
             onTextEdited: query => {
                 selectorWindow.searchQuery = query;
                 selectorWindow.selectedIndex = 0;
-                menuListView.currentIndex = 0;
             }
             onReturnPressed: selectorWindow.selectCurrent()
             onDownPressed: selectorWindow.navigate(1)
