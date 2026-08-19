@@ -114,8 +114,8 @@ Variants {
 
             // --- BATTERY & CHARGING TRACKING (UPower) ---
             readonly property var batteryDevice: UPower.displayDevice
-            readonly property real batteryPercentage: batteryDevice?.percentage ?? 1.0
-            readonly property var batteryState: batteryDevice?.state ?? null
+            readonly property real batteryPercentage: (batteryDevice && batteryDevice.percentage !== undefined) ? batteryDevice.percentage : 1.0
+            readonly property var batteryState: batteryDevice ? batteryDevice.state : null
             readonly property bool isCharging: batteryState === UPowerDeviceState.Charging
             readonly property bool isPluggedIn: isCharging || batteryState === UPowerDeviceState.PendingCharge || batteryState === UPowerDeviceState.FullyCharged
             readonly property bool isDischarging: batteryState === UPowerDeviceState.Discharging

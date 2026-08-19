@@ -374,8 +374,11 @@ BaseFlyoutPanel {
                     onRightClickedWithPos: (mx, my) => {
                         appsListView.currentIndex = index;
                         selectedIndex = index;
+                        var itemData = modelData;
                         var pos = appCard.mapToItem(appContextMenu, mx, my);
-                        flyoutWindow.openContextMenuForItemAt(pos.x, pos.y, modelData);
+                        Qt.callLater(function() {
+                            flyoutWindow.openContextMenuForItemAt(pos.x, pos.y, itemData);
+                        });
                     }
 
                     RowLayout {

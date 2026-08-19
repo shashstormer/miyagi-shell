@@ -61,8 +61,17 @@ QtObject {
         }
     }
 
+    property Process brightnessSetProc: Process {
+        command: ["brightnessctl", "set", "100%"]
+    }
+
     function setBrightness(percent) {
         var p = Math.max(1, Math.min(100, Math.round(percent)));
-        var proc = Qt.createQmlObject('import Quickshell.Io; Process { command: ["brightnessctl", "set", "' + p + '%"]; running: true }', brightnessService, "BrightnessSetter");
+        brightnessService.currentBrightness = p / 100.0;
+        brightnessSetProc.command = ["brightnessctl", "set", p + "%"];
+        if (brightnessSetProc.running) {
+            brightnessSetProc.running = false;
+        }
+        brightnessSetProc.running = true;
     }
 }

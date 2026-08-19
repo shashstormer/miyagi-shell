@@ -108,7 +108,7 @@ Rectangle {
                 QsMenuAnchor {
                     id: menuAnchor
                     menu: itemRect.modelData ? itemRect.modelData.menu : null
-                    anchor.window: root.parentWindow
+                    anchor.item: itemRect
                     anchor.edges: Edges.Top
                     anchor.gravity: Edges.Top
                 }
@@ -126,21 +126,27 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
 
                     onClicked: mouse => {
+                        if (mouse) mouse.accepted = true;
+                        var targetData = modelData;
+                        if (!targetData) return;
+
                         if (mouse.button === Qt.LeftButton) {
-                            if (modelData && modelData.activate) {
-                                modelData.activate();
+                            if (targetData.activate) {
+                                targetData.activate();
                             }
                         } else if (mouse.button === Qt.RightButton) {
-                            if (modelData && modelData.hasMenu && menuAnchor) {
-                                var pos = itemRect.mapToItem(null, 0, 0);
-                                menuAnchor.anchor.rect = Qt.rect(pos.x, pos.y, itemRect.width, itemRect.height);
-                                menuAnchor.open();
-                            } else if (modelData && modelData.contextMenu) {
-                                modelData.contextMenu();
+                            if (targetData.hasMenu && menuAnchor) {
+                                Qt.callLater(function() {
+                                    if (menuAnchor) menuAnchor.open();
+                                });
+                            } else if (targetData.contextMenu) {
+                                Qt.callLater(function() {
+                                    if (targetData && targetData.contextMenu) targetData.contextMenu();
+                                });
                             }
                         } else if (mouse.button === Qt.MiddleButton) {
-                            if (modelData && modelData.secondaryActivate) {
-                                modelData.secondaryActivate();
+                            if (targetData.secondaryActivate) {
+                                targetData.secondaryActivate();
                             }
                         }
                     }

@@ -1232,10 +1232,18 @@ QtObject {
         }
     }
 
+    property Process powerProfileSetterProc: Process {
+        command: ["powerprofilesctl", "set", "balanced"]
+    }
+
     function setPowerProfile(profile) {
         var clean = (profile || "balanced").toLowerCase().trim();
         configService.activePowerProfile = clean;
-        var setter = Qt.createQmlObject('import Quickshell.Io; Process { command: ["powerprofilesctl", "set", "' + clean + '"]; running: true }', configService, "PowerProfileSetter");
+        powerProfileSetterProc.command = ["powerprofilesctl", "set", clean];
+        if (powerProfileSetterProc.running) {
+            powerProfileSetterProc.running = false;
+        }
+        powerProfileSetterProc.running = true;
     }
 
     Component.onCompleted: {

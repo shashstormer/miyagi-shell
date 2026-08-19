@@ -56,6 +56,16 @@ Variants {
             implicitHeight: barWindow.screen ? barWindow.screen.height : 1080
             visible: isBarActive
 
+            function safeMapY(item, offsetY) {
+                if (!item || !barWindow.visible) return 0;
+                try {
+                    var p = item.mapToItem(null, 0, 0);
+                    return p ? (p.y + (offsetY || 0)) : 0;
+                } catch (e) {
+                    return 0;
+                }
+            }
+
             // Flush Left Bar Container Panel
             Rectangle {
                 id: panelBg
@@ -99,9 +109,9 @@ Variants {
                         onHoverEntered: {
                             var currentLayout = (ConfigService.workspaceLayouts && ConfigService.workspaceLayouts[ConfigService.activeWorkspaceId.toString()]) || "dwindle";
                             var label = currentLayout.charAt(0).toUpperCase() + currentLayout.slice(1) + " Layout";
-                            var mappedPos = layoutBtn.mapToItem(null, 0, 0);
+                            var yPos = barWindow.safeMapY(layoutBtn, layoutBtn.height / 2);
                             if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
-                                simpleTooltip.showTooltip(label, mappedPos.y + (layoutBtn.height / 2));
+                                simpleTooltip.showTooltip(label, yPos);
                             }
                         }
 
@@ -119,9 +129,9 @@ Variants {
                             ConfigService.setWorkspaceLayout(ConfigService.activeWorkspaceId, nextLayout);
 
                             var updatedLabel = nextLayout.charAt(0).toUpperCase() + nextLayout.slice(1) + " Layout";
-                            var mappedPos = layoutBtn.mapToItem(null, 0, 0);
+                            var yPos = barWindow.safeMapY(layoutBtn, layoutBtn.height / 2);
                             if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
-                                simpleTooltip.showTooltip(updatedLabel, mappedPos.y + (layoutBtn.height / 2));
+                                simpleTooltip.showTooltip(updatedLabel, yPos);
                             }
                         }
                     }
@@ -217,9 +227,9 @@ Variants {
                                 cursorShape: Qt.PointingHandCursor
 
                                 onEntered: {
-                                    var mappedPos = appMouse.mapToItem(null, 0, 0);
+                                    var yPos = barWindow.safeMapY(appMouse, 0);
                                     if (typeof windowPreviewTooltip !== "undefined" && windowPreviewTooltip) {
-                                        windowPreviewTooltip.showTooltip(modelData, mappedPos.y);
+                                        windowPreviewTooltip.showTooltip(modelData, yPos);
                                     }
                                 }
 
@@ -277,7 +287,7 @@ Variants {
                         isActive: typeof bluetoothPanel !== "undefined" && bluetoothPanel && bluetoothPanel.isOpen
 
                         onHoverEntered: {
-                            var mappedPos = btnBluetooth.mapToItem(null, 0, 0);
+                            var yPos = barWindow.safeMapY(btnBluetooth, 0);
                             var tooltip = "Bluetooth: Off";
                             if (ConfigService.bluetoothPowered) {
                                 if (ConfigService.bluetoothConnected) {
@@ -287,7 +297,7 @@ Variants {
                                 }
                             }
                             if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
-                                simpleTooltip.showTooltip(tooltip, mappedPos.y);
+                                simpleTooltip.showTooltip(tooltip, yPos);
                             }
                         }
                         onHoverExited: {
@@ -325,7 +335,7 @@ Variants {
                         isActive: typeof wifiPanel !== "undefined" && wifiPanel && wifiPanel.isOpen
 
                         onHoverEntered: {
-                            var mappedPos = btnWifi.mapToItem(null, 0, 0);
+                            var yPos = barWindow.safeMapY(btnWifi, 0);
                             var tooltip = "Wi-Fi: Disabled";
                             if (ConfigService.wifiEnabled) {
                                 if (ConfigService.wifiConnected) {
@@ -335,7 +345,7 @@ Variants {
                                 }
                             }
                             if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
-                                simpleTooltip.showTooltip(tooltip, mappedPos.y);
+                                simpleTooltip.showTooltip(tooltip, yPos);
                             }
                         }
                         onHoverExited: {
@@ -366,10 +376,10 @@ Variants {
                         isActive: typeof microphonePanel !== "undefined" && microphonePanel && microphonePanel.isOpen
 
                         onHoverEntered: {
-                            var mappedPos = btnMic.mapToItem(null, 0, 0);
+                            var yPos = barWindow.safeMapY(btnMic, 0);
                             var tooltip = ConfigService.micMuted ? "Microphone: Muted" : ("Microphone: " + ConfigService.micVolume + "%" + (ConfigService.micSourceName ? " (" + ConfigService.micSourceName + ")" : ""));
                             if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
-                                simpleTooltip.showTooltip(tooltip, mappedPos.y);
+                                simpleTooltip.showTooltip(tooltip, yPos);
                             }
                         }
                         onHoverExited: {
@@ -408,10 +418,10 @@ Variants {
                         isActive: typeof volumePanel !== "undefined" && volumePanel && volumePanel.isOpen
 
                         onHoverEntered: {
-                            var mappedPos = btnVolume.mapToItem(null, 0, 0);
+                            var yPos = barWindow.safeMapY(btnVolume, 0);
                             var tooltip = ConfigService.audioMuted ? "Audio: Muted" : ("Volume: " + ConfigService.audioVolume + "%" + (ConfigService.audioSinkName ? " (" + ConfigService.audioSinkName + ")" : ""));
                             if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
-                                simpleTooltip.showTooltip(tooltip, mappedPos.y);
+                                simpleTooltip.showTooltip(tooltip, yPos);
                             }
                         }
                         onHoverExited: {
@@ -423,6 +433,36 @@ Variants {
                         onClicked: {
                             if (typeof simpleTooltip !== "undefined" && simpleTooltip) simpleTooltip.hideTooltip();
                             if (typeof volumePanel !== "undefined" && volumePanel) InputService.togglePanel(volumePanel);
+                        }
+                    }
+
+                    SquareButton {
+                        id: btnMenuSelector
+                        size: 36
+                        customRadius: 8
+                        iconName: "panel"
+                        iconSize: 18
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        isActive: typeof menuSelectorPanel !== "undefined" && menuSelectorPanel && menuSelectorPanel.isOpen
+
+                        onHoverEntered: {
+                            var yPos = barWindow.safeMapY(btnMenuSelector, btnMenuSelector.height / 2);
+                            if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
+                                simpleTooltip.showTooltip("Quick Menu", yPos);
+                            }
+                        }
+
+                        onHoverExited: {
+                            if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
+                                simpleTooltip.hideTooltip();
+                            }
+                        }
+
+                        onClicked: {
+                            if (typeof simpleTooltip !== "undefined" && simpleTooltip) simpleTooltip.hideTooltip();
+                            if (typeof menuSelectorPanel !== "undefined" && menuSelectorPanel) {
+                                InputService.togglePanel(menuSelectorPanel);
+                            }
                         }
                     }
                 }

@@ -89,6 +89,17 @@ QtObject {
         manualPlayerIndex = (currentIdx + 1) % playerList.length;
     }
 
+    function selectPlayer(playerOrIndex) {
+        if (typeof playerOrIndex === "number") {
+            manualPlayerIndex = Math.max(0, Math.min(playerOrIndex, playerCount - 1));
+        } else if (playerOrIndex && playerList) {
+            var idx = playerList.indexOf(playerOrIndex);
+            if (idx >= 0) {
+                manualPlayerIndex = idx;
+            }
+        }
+    }
+
     function togglePlaying() {
         if (hasPlayer && activePlayer) {
             activePlayer.togglePlaying();

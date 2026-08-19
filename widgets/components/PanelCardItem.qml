@@ -81,6 +81,7 @@ Rectangle {
         }
 
         onClicked: mouse => {
+            if (mouse) mouse.accepted = true;
             if (!InputService.useMouse()) return;
             if (mouse.button === Qt.RightButton) {
                 root.rightClicked();
@@ -91,6 +92,7 @@ Rectangle {
         }
 
         onDoubleClicked: mouse => {
+            if (mouse) mouse.accepted = true;
             if (!InputService.useMouse()) return;
             if (mouse.button === Qt.LeftButton) {
                 root.doubleClicked();

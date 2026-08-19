@@ -103,6 +103,13 @@ Canvas {
             ctx.beginPath();
             ctx.rect(w*0.28, h*0.28, w*0.44, h*0.44);
             ctx.stroke();
+        } else if (name === "panel" || name === "sidebar" || name === "panel-left") {
+            ctx.beginPath();
+            ctx.rect(w*0.15, h*0.16, w*0.7, h*0.68);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(w*0.40, h*0.16); ctx.lineTo(w*0.40, h*0.84);
+            ctx.stroke();
         } else if (name === "palette" || name === "appearance") {
             ctx.beginPath();
             ctx.arc(w/2, h/2, w*0.38, 0, Math.PI * 2);

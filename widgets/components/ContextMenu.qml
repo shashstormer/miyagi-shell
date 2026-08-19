@@ -93,7 +93,10 @@ Item {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: root.close()
+            onClicked: mouse => {
+                if (mouse) mouse.accepted = true;
+                root.close();
+            }
         }
     }
 
@@ -237,7 +240,8 @@ Item {
                             root.selectedIndex = index;
                             InputService.useMouse();
                         }
-                        onClicked: {
+                        onClicked: mouse => {
+                            if (mouse) mouse.accepted = true;
                             root.selectedIndex = index;
                             root.selectCurrent();
                         }

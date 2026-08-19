@@ -269,6 +269,11 @@ ShellRoot {
         id: windowSwitcherPanel
     }
 
+    // 19. Media Player Panel
+    MediaPanel {
+        id: mediaPanel
+    }
+
     // IPC Handler for Alt-Tab Switcher
     IpcHandler {
         target: "alttab"
@@ -507,6 +512,7 @@ ShellRoot {
                 typeof workspacesOverviewPanel !== "undefined" ? workspacesOverviewPanel : null,
                 typeof menuSelectorPanel !== "undefined" ? menuSelectorPanel : null,
                 typeof windowSwitcherPanel !== "undefined" ? windowSwitcherPanel : null,
+                typeof mediaPanel !== "undefined" ? mediaPanel : null,
                 typeof settingsPanel !== "undefined" ? settingsPanel : null
             ];
             for (var i = 0; i < panels.length; i++) {

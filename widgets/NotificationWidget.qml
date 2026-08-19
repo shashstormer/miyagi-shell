@@ -10,8 +10,10 @@ Item {
 
     property var notifServer: null
 
-    // Decoupled JS array model for active toast popups
+    // Decoupled JS array model for active toast popups (contains only primitive serializable data)
     property var activePopups: []
+    // Private dictionary holding active Notification QObject handles safely outside the QML var list model
+    property var _activeHandles: ({})
 
     readonly property alias contentHeight: popupList.contentHeight
 
@@ -34,6 +36,7 @@ Item {
             notification.tracked = true;
 
             var notifId = notification.id || Math.floor(Math.random() * 100000);
+            notifWidgetRoot._activeHandles[notifId] = notification;
 
             // Close notification when sending app requests close via D-Bus
             try {
@@ -60,7 +63,7 @@ Item {
             var currentPopups = notifWidgetRoot.activePopups.slice();
             var timeoutVal = notification.expireTimeout === 0 ? 0 : (notification.expireTimeout > 0 ? notification.expireTimeout : 5000);
 
-            // Add new notification popup item to array model
+            // Add new notification popup item to array model (pure data, NO raw QObject pointers)
             currentPopups.unshift({
                 id: notifId,
                 appName: notification.appName ? notification.appName.toUpperCase() : "SYSTEM",
@@ -69,8 +72,7 @@ Item {
                 image: (notification.image || notification.appIcon) ? (notification.image || notification.appIcon) : "",
                 urgency: notification.urgency,
                 timeout: timeoutVal,
-                actions: extractedActions,
-                notifObj: notification
+                actions: extractedActions
             });
 
             notifWidgetRoot.activePopups = currentPopups;
@@ -81,9 +83,10 @@ Item {
         ConfigService.focusApp(appName);
     }
 
-    // Safely remove popup card from UI stack by unique ID
+    // Safely remove popup card from UI stack by unique ID and clean up handle
     function dismissById(targetId) {
         if (!targetId) return;
+        delete notifWidgetRoot._activeHandles[targetId];
         activePopups = activePopups.filter(function(item) {
             return item && item.id !== targetId;
         });
@@ -279,22 +282,24 @@ Item {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
+                                    onClicked: mouse => {
+                                        if (mouse) mouse.accepted = true;
                                         var actionData = modelData;
                                         var notifItem = toastCard.modelData;
 
-                                        if (notifItem && notifItem.notifObj) {
-                                            try {
-                                                var actionsList = notifItem.notifObj.actions;
-                                                if (actionsList) {
+                                        if (notifItem && notifItem.id) {
+                                            var handle = notifWidgetRoot._activeHandles[notifItem.id];
+                                            if (handle && handle.actions) {
+                                                try {
+                                                    var actionsList = handle.actions;
                                                     for (var k = 0; k < actionsList.length; k++) {
                                                         if (actionsList[k] && actionsList[k].identifier === actionData.id) {
                                                             actionsList[k].invoke();
                                                             break;
                                                         }
                                                     }
-                                                }
-                                            } catch (e) {}
+                                                } catch (e) {}
+                                            }
                                         }
                                         if (typeof notifWidgetRoot !== "undefined" && notifWidgetRoot && notifItem) {
                                             if (notifItem.appName) notifWidgetRoot.focusApp(notifItem.appName);
@@ -329,7 +334,8 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
+                        onClicked: mouse => {
+                            if (mouse) mouse.accepted = true;
                             if (toastCard.modelData && toastCard.modelData.id) {
                                 notifWidgetRoot.dismissById(toastCard.modelData.id);
                             }
@@ -343,13 +349,15 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 z: -1
-                onClicked: {
+                onClicked: mouse => {
+                    if (mouse) mouse.accepted = true;
                     var notifItem = toastCard.modelData;
-                    if (notifItem) {
-                        if (notifItem.notifObj) {
+                    if (notifItem && notifItem.id) {
+                        var handle = notifWidgetRoot._activeHandles[notifItem.id];
+                        if (handle && handle.actions) {
                             try {
-                                var actionsList = notifItem.notifObj.actions;
-                                if (actionsList && actionsList.length > 0) {
+                                var actionsList = handle.actions;
+                                if (actionsList && actionsList.length > 0 && actionsList[0]) {
                                     actionsList[0].invoke();
                                 }
                             } catch (e) {}

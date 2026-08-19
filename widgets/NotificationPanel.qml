@@ -30,8 +30,10 @@ Item {
         notifFlyout.close();
     }
 
-    // In-memory persistent history array
+    // In-memory persistent history array (pure data, NO raw QObject pointers)
     property var historyList: []
+    // Private dictionary holding Notification QObject handles safely outside QML var model
+    property var _historyHandles: ({})
     property alias openedFrom: notifFlyout.openedFrom
 
     readonly property int unreadCount: {
@@ -51,11 +53,16 @@ Item {
     }
 
     function clearAll() {
+        _historyHandles = {};
         historyList = [];
     }
 
     function removeNotification(index) {
         if (index >= 0 && index < historyList.length) {
+            var item = historyList[index];
+            if (item && item.id) {
+                delete root._historyHandles[item.id];
+            }
             var copy = historyList.slice();
             copy.splice(index, 1);
             historyList = copy;
@@ -63,6 +70,7 @@ Item {
     }
 
     function removeNotificationById(targetId) {
+        delete root._historyHandles[targetId];
         var copy = historyList.slice();
         for (var i = 0; i < copy.length; i++) {
             if (copy[i] && copy[i].id === targetId) {
@@ -98,6 +106,7 @@ Item {
             }
 
             var notifId = notification.id || Math.floor(Math.random() * 1000000);
+            root._historyHandles[notifId] = notification;
 
             try {
                 if (notification.closed) {
@@ -109,6 +118,7 @@ Item {
 
             var isTemporary = (notification.expireTimeout > 0);
             var timeoutMs = isTemporary ? notification.expireTimeout : 0;
+            var expiresTimestamp = isTemporary ? (Date.now() + Math.max(100, Math.round(timeoutMs))) : 0;
 
             var extractedActions = [];
             if (notification.actions) {
@@ -136,18 +146,40 @@ Item {
                 actions: extractedActions,
                 time: timeStr,
                 read: false,
-                notifObj: notification
+                expiresAt: expiresTimestamp
             };
 
             currentHistory.unshift(historyItem);
             root.historyList = currentHistory;
+        }
+    }
 
-            if (isTemporary && timeoutMs > 0) {
-                var expireTimer = Qt.createQmlObject('import QtQuick 2.15; Timer { interval: ' + Math.max(100, Math.round(timeoutMs)) + '; running: true; repeat: false }', root, "historyTimer");
-                expireTimer.triggered.connect(function() {
-                    root.removeNotificationById(notifId);
-                    expireTimer.destroy();
-                });
+    // Single static expiration check timer (replaces dynamic Qt.createQmlObject timer creation)
+    Timer {
+        id: notifCleanupTimer
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            var now = Date.now();
+            var hasExpired = false;
+            for (var i = 0; i < root.historyList.length; i++) {
+                if (root.historyList[i] && root.historyList[i].expiresAt > 0 && root.historyList[i].expiresAt <= now) {
+                    hasExpired = true;
+                    break;
+                }
+            }
+            if (hasExpired) {
+                var copy = [];
+                for (var j = 0; j < root.historyList.length; j++) {
+                    var item = root.historyList[j];
+                    if (item && item.expiresAt > 0 && item.expiresAt <= now) {
+                        delete root._historyHandles[item.id];
+                    } else {
+                        copy.push(item);
+                    }
+                }
+                root.historyList = copy;
             }
         }
     }
@@ -360,17 +392,20 @@ Item {
                 if (item.appName) focusApp(item.appName);
             } else if (selectedSubIndex > 0 && selectedSubIndex <= actionCount) {
                 var act = item.actions[selectedSubIndex - 1];
-                if (act && item.notifObj && item.notifObj.actions) {
-                    var actionsList = item.notifObj.actions;
-                    for (var k = 0; k < actionsList.length; k++) {
-                        if (actionsList[k] && actionsList[k].identifier === act.id) {
-                            try { actionsList[k].invoke(); } catch (e) {}
-                            break;
+                if (act && item.id) {
+                    var handle = root._historyHandles[item.id];
+                    if (handle && handle.actions) {
+                        var actionsList = handle.actions;
+                        for (var k = 0; k < actionsList.length; k++) {
+                            if (actionsList[k] && actionsList[k].identifier === act.id) {
+                                try { actionsList[k].invoke(); } catch (e) {}
+                                break;
+                            }
                         }
                     }
                 }
             } else if (selectedSubIndex === actionCount + 1) {
-                openContextMenuForNotif(item, selectedIndex);
+                openContextMenuForSelected();
             } else if (selectedSubIndex === actionCount + 2) {
                 removeNotification(selectedIndex);
                 if (selectedIndex >= historyList.length) {
@@ -664,11 +699,16 @@ Item {
                     }
 
                     onClicked: mouse => {
+                        if (mouse) mouse.accepted = true;
                         if (!InputService.useMouse()) return;
                         root.selectedIndex = index;
                         if (mouse.button === Qt.RightButton) {
+                            var item = modelData;
+                            var idx = index;
                             var pos = notifCard.mapToItem(notifContextMenu, mouse.x, mouse.y);
-                            root.openContextMenuForNotifAt(pos.x, pos.y, modelData, index);
+                            Qt.callLater(function() {
+                                root.openContextMenuForNotifAt(pos.x, pos.y, item, idx);
+                            });
                         } else {
                             root.activateSelected();
                         }
@@ -844,18 +884,22 @@ Item {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
+                                        onClicked: mouse => {
+                                            if (mouse) mouse.accepted = true;
                                             var actionData = modelData;
                                             var parentCard = notifCard.modelData;
 
-                                            if (parentCard && parentCard.notifObj && parentCard.notifObj.actions) {
-                                                var actionsList = parentCard.notifObj.actions;
-                                                for (var k = 0; k < actionsList.length; k++) {
-                                                    if (actionsList[k] && actionsList[k].identifier === actionData.id) {
-                                                        try {
-                                                            actionsList[k].invoke();
-                                                        } catch (e) {}
-                                                        break;
+                                            if (parentCard && parentCard.id) {
+                                                var handle = root._historyHandles[parentCard.id];
+                                                if (handle && handle.actions) {
+                                                    var actionsList = handle.actions;
+                                                    for (var k = 0; k < actionsList.length; k++) {
+                                                        if (actionsList[k] && actionsList[k].identifier === actionData.id) {
+                                                            try {
+                                                                actionsList[k].invoke();
+                                                            } catch (e) {}
+                                                            break;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -908,10 +952,15 @@ Item {
                                     root.selectedIndex = index;
                                     root.selectedSubIndex = moreBtn.actionCount + 1;
                                 }
-                                onClicked: {
+                                onClicked: mouse => {
+                                    if (mouse) mouse.accepted = true;
                                     InputService.useMouse();
+                                    var item = notifCard.modelData;
+                                    var idx = index;
                                     var pos = moreBtn.mapToItem(notifContextMenu, 0, moreBtn.height);
-                                    root.openContextMenuForNotifAt(pos.x, pos.y, notifCard.modelData, index);
+                                    Qt.callLater(function() {
+                                        root.openContextMenuForNotifAt(pos.x, pos.y, item, idx);
+                                    });
                                 }
                             }
                         }

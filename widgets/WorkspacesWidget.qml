@@ -87,10 +87,12 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
 
                     onEntered: {
-                        var mappedPos = wsMouse.mapToItem(null, 0, 0);
-                        if (typeof workspacePreviewTooltip !== "undefined" && workspacePreviewTooltip) {
-                            workspacePreviewTooltip.showTooltip(wsId, mappedPos.x + (wsItem.implicitWidth / 2), mappedPos.y + root.height + 6, true);
-                        }
+                        try {
+                            var mappedPos = wsMouse.mapToItem(null, 0, 0);
+                            if (mappedPos && typeof workspacePreviewTooltip !== "undefined" && workspacePreviewTooltip) {
+                                workspacePreviewTooltip.showTooltip(wsId, mappedPos.x + (wsItem.implicitWidth / 2), mappedPos.y + root.height + 6, true);
+                            }
+                        } catch (e) {}
                     }
 
                     onExited: {

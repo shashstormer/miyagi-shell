@@ -24,9 +24,9 @@ Rectangle {
 
     readonly property real batteryPercentage: (effectiveBat && effectiveBat.percentage !== undefined)
         ? (effectiveBat.percentage / 100.0) 
-        : (batteryDevice?.percentage ?? 1.0)
+        : ((batteryDevice && batteryDevice.percentage !== undefined) ? batteryDevice.percentage : 1.0)
 
-    readonly property var batteryState: batteryDevice?.state ?? null
+    readonly property var batteryState: batteryDevice ? batteryDevice.state : null
 
     readonly property bool isCharging: (effectiveBat && effectiveBat.is_charging !== undefined)
         ? effectiveBat.is_charging 
@@ -153,10 +153,12 @@ Rectangle {
             var etaText = (bat && bat.eta) ? bat.eta : statusStr;
 
             var label = "Battery: " + root.percentInt + "% (" + etaText + ")";
-            var mappedPos = root.mapToItem(null, 0, 0);
-            if (typeof simpleTooltip !== "undefined" && simpleTooltip) {
-                simpleTooltip.showTooltip(label, mappedPos.y + (root.height / 2));
-            }
+            try {
+                var mappedPos = root.mapToItem(null, 0, 0);
+                if (mappedPos && typeof simpleTooltip !== "undefined" && simpleTooltip) {
+                    simpleTooltip.showTooltip(label, mappedPos.y + (root.height / 2));
+                }
+            } catch (e) {}
         }
 
         onExited: {

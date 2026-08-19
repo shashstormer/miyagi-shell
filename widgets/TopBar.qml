@@ -48,6 +48,16 @@ Variants {
             implicitHeight: isBarActive ? (isBarVisible ? 48 : 6) : 0
             visible: isBarActive
 
+            function safeMapX(item, offsetX) {
+                if (!item || !barWindow.visible) return 0;
+                try {
+                    var p = item.mapToItem(null, 0, 0);
+                    return p ? (p.x + (offsetX || 0)) : 0;
+                } catch (e) {
+                    return 0;
+                }
+            }
+
             property var now: new Date()
             Timer {
                 interval: 1000; running: true; repeat: true
@@ -115,9 +125,9 @@ Variants {
                                     onClicked: ConfigService.switchWorkspace(index + 1)
 
                                     onHoverEntered: {
-                                        var mappedPos = wsBtn.mapToItem(null, 0, 0);
+                                        var xPos = barWindow.safeMapX(wsBtn, wsBtn.width / 2);
                                         if (typeof workspacePreviewTooltip !== "undefined" && workspacePreviewTooltip) {
-                                            workspacePreviewTooltip.showTooltip(index + 1, mappedPos.x + (wsBtn.width / 2), 0, false);
+                                            workspacePreviewTooltip.showTooltip(index + 1, xPos, 0, false);
                                         }
                                     }
 

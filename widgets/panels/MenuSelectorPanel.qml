@@ -32,6 +32,7 @@ BaseFlyoutPanel {
     property var calendarPanelRef: typeof calendarPanel !== "undefined" ? calendarPanel : null
     property var settingsPanelRef: typeof settingsPanel !== "undefined" ? settingsPanel : null
     property var windowSwitcherPanelRef: typeof windowSwitcherPanel !== "undefined" ? windowSwitcherPanel : null
+    property var mediaPanelRef: typeof mediaPanel !== "undefined" ? mediaPanel : null
 
     // Static stable definition of all menu items (no reactive bindings in the array itself)
     readonly property var allMenuItems: [
@@ -64,6 +65,12 @@ BaseFlyoutPanel {
             name: "Volume & Sound",
             description: "Audio output & playback devices",
             icon: "volume"
+        },
+        {
+            id: "media",
+            name: "Media Player",
+            description: "Control playback & switch MPRIS players",
+            icon: "music"
         },
         {
             id: "launcher",
@@ -113,6 +120,9 @@ BaseFlyoutPanel {
         if (itemId === "volume") {
             return ConfigService.audioMuted ? "Muted" : ((ConfigService.audioVolume !== undefined ? ConfigService.audioVolume : 100) + "%");
         }
+        if (itemId === "media") {
+            return MediaHelper.isPlaying ? "Playing" : (MediaHelper.hasPlayer ? (MediaHelper.activePlayer.identity || "Paused") : "Idle");
+        }
         if (itemId === "launcher") {
             return "Apps";
         }
@@ -139,6 +149,7 @@ BaseFlyoutPanel {
             else if (itemId === "wifi" && selectorWindow.wifiPanelRef) InputService.openPanel(selectorWindow.wifiPanelRef, selectorWindow);
             else if (itemId === "microphone" && selectorWindow.microphonePanelRef) InputService.openPanel(selectorWindow.microphonePanelRef, selectorWindow);
             else if (itemId === "volume" && selectorWindow.volumePanelRef) InputService.openPanel(selectorWindow.volumePanelRef, selectorWindow);
+            else if (itemId === "media" && selectorWindow.mediaPanelRef) InputService.openPanel(selectorWindow.mediaPanelRef, selectorWindow);
             else if (itemId === "launcher" && selectorWindow.appLauncherPanelRef) InputService.openPanel(selectorWindow.appLauncherPanelRef, selectorWindow);
             else if (itemId === "notifications" && selectorWindow.notificationPanelRef) InputService.openPanel(selectorWindow.notificationPanelRef, selectorWindow);
             else if (itemId === "battery" && selectorWindow.batteryPanelRef) InputService.openPanel(selectorWindow.batteryPanelRef, selectorWindow);
